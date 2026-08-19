@@ -22,6 +22,7 @@ services:
     environment:
       DATABASE_URL: postgresql://inventory:inventory@postgres:5432/inventory
       JWT_SECRET: development-only-secret-change-before-production-2026
+      JWT_EXPIRES_IN: 15m
       PORT: 3001
       WEB_ORIGIN: http://localhost:5173
     ports:

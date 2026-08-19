@@ -16,6 +16,7 @@ declare module '@fastify/jwt' {
 }
 
 const id = z.string().uuid();
+const unknownUserPasswordHash = hash('not-a-user-password', 12);
 const credentials = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(128),
@@ -47,7 +48,7 @@ const reservationSelect = `
 export function buildApp() {
   const app = Fastify({ logger: true });
   app.register(cors, { origin: config.WEB_ORIGIN });
-  app.register(jwt, { secret: config.JWT_SECRET });
+  app.register(jwt, { secret: config.JWT_SECRET, sign: { expiresIn: config.JWT_EXPIRES_IN } });
 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof AppError) {
@@ -100,7 +101,8 @@ export function buildApp() {
       body.email.toLowerCase(),
     ]);
     const user = result.rows[0];
-    if (!user || !(await compare(body.password, user.password_hash))) {
+    const passwordHash = user?.password_hash ?? (await unknownUserPasswordHash);
+    if (!(await compare(body.password, passwordHash)) || !user) {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect.');
     }
     const safeUser: AuthUser = { id: user.id, email: user.email, role: user.role };

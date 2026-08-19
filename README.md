@@ -39,7 +39,7 @@ Seed accounts:
 - Customer: `customer.three@example.com` / `Password123!`
 - Admin: `admin@example.com` / `Password123!`
 
-Run quality checks with `npm run lint`, `npm run format:check`, `npm run build`, and `npm test`.
+Run quality checks with `npm run lint`, `npm run format:check`, `npm run build`, and `npm test`. The test suite includes PostgreSQL integration tests, so keep the Compose database running while running tests outside the containers.
 
 ## Architecture
 
@@ -56,6 +56,10 @@ Creating a reservation runs in one transaction. Requested product rows are locke
 ### Retried requests
 
 The client sends a UUID idempotency key when creating a reservation. A unique database constraint binds the key to a single reservation. A retry after a lost response returns the original reservation rather than deducting stock twice.
+
+## Verification and security
+
+The automated PostgreSQL integration suite verifies that exactly one of two concurrent customers receives the final unit, a multi-product reservation cannot partially complete, idempotent retries do not deduct inventory twice, and cancellation/expiry restores stock once. Authentication tokens expire after 15 minutes by default. Login performs a bcrypt comparison even for unknown email addresses, preventing an observable shortcut for account discovery. The JWT package is pinned to `@fastify/jwt` 10.2.1, which contains the patched `fast-jwt` dependency for CVE-2026-44351.
 
 ### Multi-product reservations
 
