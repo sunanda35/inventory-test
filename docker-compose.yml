@@ -15,5 +15,39 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://inventory:inventory@postgres:5432/inventory
+      JWT_SECRET: development-only-secret-change-before-production-2026
+      PORT: 3001
+      WEB_ORIGIN: http://localhost:5173
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3001/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '5173:80'
+    depends_on:
+      api:
+        condition: service_healthy
 volumes:
   postgres_data:

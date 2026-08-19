@@ -1,6 +1,6 @@
 # Inventory Reservation System
 
-A full-stack inventory reservation application built for the Entermind technical challenge. Customers reserve available inventory and manage their own reservations. Administrators manage stock and review all reservations.
+A full-stack inventory reservation application. Customers reserve available inventory and manage their own reservations. Administrators manage stock and review all reservations.
 
 ## Stack
 
@@ -11,18 +11,26 @@ A full-stack inventory reservation application built for the Entermind technical
 
 ## Run locally
 
-Requirements: Node.js 20+ and Docker Desktop.
+For Docker environment:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:5173`.
+
+Compose starts PostgreSQL, runs the API migration and seed process, starts the API at `http://localhost:3001`, and serves the frontend at `http://localhost:5173`.
+
+For a local, non-Docker development server:
 
 ```bash
 cp .env.example apps/api/.env
 npm install
-docker compose up -d
+docker compose up -d postgres
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
-
-Open `http://localhost:5173`.
 
 Seed accounts:
 
@@ -36,7 +44,6 @@ Run quality checks with `npm run lint`, `npm run format:check`, `npm run build`,
 ## Architecture
 
 The React client communicates with a stateless Fastify API over REST. PostgreSQL is the sole inventory authority. The API holds no inventory state in memory, so multiple API instances can safely serve requests.
-
 
 The main tables are `users`, `products`, `reservations`, `reservation_items`, and `inventory_adjustments`. Products expose available inventory and a monotonically increasing version. Every stock mutation increments the version for traceability.
 
@@ -72,7 +79,7 @@ An administrator can adjust available stock only when the result remains non-neg
 
 ## Scaling to 100,000 concurrent users
 
-To scale this, we have to intoduce redis lock for concurrent request for same product, Rate liting,  db connection pool, maybe read replica and all,  It totally depends, there is no single solution can satisfy this. We have to check how users using it, what the bottleneck, then have to do that way. 
+To scale this, we have to intoduce redis lock for concurrent request for same product, Rate liting, db connection pool, maybe read replica and all, It totally depends, there is no single solution can satisfy this. We have to check how users using it, what the bottleneck, then have to do that way.
 
 ## Production readiness improvements
 
